@@ -1,0 +1,6 @@
+POST http://localhost:3000/api/scrape-scholar
+Content-Type: application/json
+
+{
+  "profileUrl": "https://scholar.google.com/citations?user=Pd-hYBUAAAAJ&hl=en"
+}
