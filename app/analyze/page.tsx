@@ -20,14 +20,10 @@ export default function AnalyzePage() {
   const dispatch = useDispatch()
   const router = useRouter()
 
-  const resumeData = useSelector((state: RootState) => state.resume.data)
-  const scholarData = useSelector((state: RootState) => state.scholar.data)
-  
-<<<<<<< HEAD
+ const resumeData = useSelector((state: RootState) => state.resume.data)
+const scholarData = useSelector((state: RootState) => state.scholar.data)
 
-=======
->>>>>>> 5cd5d6b26e155cd7fff27aa4e01c7d8d7e8e612a
-  const isReady = resumeData && scholarData
+const isReady = resumeData && scholarData
   const progress = isReady ? 100 : resumeData || scholarData ? 50 : 0
 
   const handleGenerate = async () => {
