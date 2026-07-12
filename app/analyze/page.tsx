@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
 import { ResumeUploader } from "@/components/resume-uploader"
@@ -23,7 +22,7 @@ export default function AnalyzePage() {
 
   const resumeData = useSelector((state: RootState) => state.resume.data)
   const scholarData = useSelector((state: RootState) => state.scholar.data)
-  const suggestions = useSelector((state: RootState) => state.suggestions.projects)
+  
 
   const isReady = resumeData && scholarData
   const progress = isReady ? 100 : resumeData || scholarData ? 50 : 0
