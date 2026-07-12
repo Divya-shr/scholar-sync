@@ -7,8 +7,8 @@ export const store = configureStore({
   reducer: {
     resume: resumeReducer,
     scholar: scholarReducer,
-    suggestions: suggestionReducer
-  }
+    suggestions: suggestionReducer,
+  },
 });
 
 export type RootState = ReturnType<typeof store.getState>;
