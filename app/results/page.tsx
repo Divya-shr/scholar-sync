@@ -16,11 +16,11 @@ export default function ResultsPage() {
   const scholarData = useSelector((state: RootState) => state.scholar.data)
   const projects = useSelector((state: RootState) => state.suggestions.projects)
 
-  useEffect(() => {
-    if (!resumeData || !scholarData) {
-      router.replace("/analyze")
-    }
-  }, [resumeData, scholarData])
+useEffect(() => {
+  if (!resumeData || !scholarData) {
+    router.replace("/analyze")
+  }
+}, [resumeData, scholarData, router])
 
   if (!resumeData || !scholarData) return null
 
