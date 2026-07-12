@@ -23,7 +23,10 @@ export default function AnalyzePage() {
   const resumeData = useSelector((state: RootState) => state.resume.data)
   const scholarData = useSelector((state: RootState) => state.scholar.data)
   
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5cd5d6b26e155cd7fff27aa4e01c7d8d7e8e612a
   const isReady = resumeData && scholarData
   const progress = isReady ? 100 : resumeData || scholarData ? 50 : 0
 
