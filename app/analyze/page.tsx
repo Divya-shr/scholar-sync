@@ -14,37 +14,7 @@ import { fetchSuggestions } from "@/store/thunks/suggestProjects"
 import { RootState } from "@/store"
 
 
-const handleGenerate = async () => {
-  if (!resumeFile || !scholarUrl) {
-    alert("Please upload resume and scholar URL");
-    return;
-  }
 
-  const resumeForm = new FormData();
-  resumeForm.append("resume", resumeFile);
-
-  try {
-    const [resumeRes, scholarRes] = await Promise.all([
-      fetch("/api/parse-resume", { method: "POST", body: resumeForm }),
-      fetch("/api/scrape-scholar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileUrl: scholarUrl }),
-      }),
-    ]);
-
-    const resumeData = await resumeRes.json();
-    const scholarData = await scholarRes.json();
-
-    dispatch(setResumeData(resumeData));
-    dispatch(setScholarData(scholarData));
-    dispatch(fetchSuggestions(resumeData, scholarData));
-
-    router.push("/results");
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
 
 
 export default function AnalyzePage() {
