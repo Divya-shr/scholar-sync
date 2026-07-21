@@ -38,7 +38,7 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
     maxFiles: 1,
-  })
+  });
 
   const handleUpload = async () => {
   if (!file) return;
