@@ -119,8 +119,8 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
               {isDragActive ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <p className="text-blue-600 font-semibold text-lg mb-2">Drop your resume here!</p>
-                  <p className="text-blue-500 text-sm">We will analyze it instantly</p>
-                </motion.div>
+                  <p className="text-blue-500 text-sm">We wil analyze it instantly</p>
+                </motion.div>l
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <p className="text-slate-700 font-semibold text-lg mb-2">Drag & drop your resume here</p>
