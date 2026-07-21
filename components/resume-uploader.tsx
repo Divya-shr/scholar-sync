@@ -31,15 +31,20 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
     }
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-    },
-    maxFiles: 1,
-  })
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  onDrop,
+  accept: {
+    "application/pdf": [".pdf"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  },
+  maxFiles: 1,
+})
 
+const {
+  onAnimationStart,
+  onAnimationEnd,
+  ...rootProps
+} = getRootProps()
   const handleUpload = async () => {
   if (!file) return;
 
@@ -103,7 +108,7 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              {...getRootProps()}
+              {...rootProps}
               className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${
                 isDragActive
                   ? "border-blue-400 bg-blue-100 scale-105"
@@ -119,7 +124,7 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
               {isDragActive ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <p className="text-blue-600 font-semibold text-lg mb-2">Drop your resume here!</p>
-                  <p className="text-blue-500 text-sm"><p>Drag and drop your resume or click to browse.</p></p>
+                  <p className="text-blue-500 text-sm">Drag and drop your resume or click to browse.</p>
                 </motion.div>
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
