@@ -38,9 +38,8 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     },
     maxFiles: 1,
-  });
-
-  const handleUpload = async () => {
+  })
+const handleUpload = async () => {
   if (!file) return;
 
   setIsUploading(true);
@@ -119,7 +118,7 @@ export function ResumeUploader({ onDataExtracted }: ResumeUploaderProps) {
               {isDragActive ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <p className="text-blue-600 font-semibold text-lg mb-2">Drop your resume here!</p>
-                  <p className="text-blue-500 text-sm">We will analyze it instantly</p>
+                  <p className="text-blue-500 text-sm">We'll analyze it instantly</p>
                 </motion.div>
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

@@ -35,7 +35,8 @@ function extractSkills(lowerText: string): string[] {
 }
 
 function extractEducation(text: string): string[] {
-  const matches = text.match(/(Bachelor|Master|PhD|MSc|BSc|BE|B\.Tech|M\.Tech)[^\n]{0,80}/gi) || [];
+  const matches: string[] =
+  text.match(/(Bachelor|Master|PhD|MSc|BSc|BE|B\.Tech|M\.Tech)[^\n]{0,80}/gi) ?? [];
   const cgpa = text.match(/CGPA[:\s]?[0-9.]{1,4}/i);
   if (cgpa) matches.push(cgpa[0]);
   return Array.from(new Set(matches.map(m => m.trim())));
