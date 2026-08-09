@@ -1,7 +1,7 @@
 import os
 from huggingface_hub import InferenceClient
 
-# Read token from Render Environment Variables
+# Pass the KEY NAME ("HF_TOKEN") to os.getenv, not the token value
 HF_TOKEN = os.getenv("HF_TOKEN")
 client = InferenceClient(api_key=HF_TOKEN)
 
@@ -13,9 +13,8 @@ def get_embedding(text: str):
     )
 
 def suggest_projects(texts: list[str]):
-    # Generate embeddings via HF API instead of local SentenceTransformer
     embeddings = [get_embedding(t) for t in texts]
     
-    # Run your vector comparison / matching logic here
-    # ...
+    # Perform vector similarity / matching logic here
+    results = []  # Ensure 'results' is populated before returning
     return results
