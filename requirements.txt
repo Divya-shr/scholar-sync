@@ -2,3 +2,4 @@ fastapi
 uvicorn
 pydantic
 huggingface-hub
+numpy
