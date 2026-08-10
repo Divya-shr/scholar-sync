@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client'; // or your supabase helper path
+
+export async function POST(request: Request) {
   try {
-    const { resumeData, scholarData, projects } = await req.json();
+    const { resumeData, scholarData, projects } = await request.json();
 
     if (!resumeData || !scholarData || !projects) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
