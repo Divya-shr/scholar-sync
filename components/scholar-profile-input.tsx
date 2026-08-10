@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,8 +12,8 @@ interface ScholarData {
   name: string;
   affiliation: string;
   interests: string[];
-  citations: number;
-  hIndex: number;
+  citations: number | string;
+  hIndex: number | string;
   recentPapers: string[];
 }
 
@@ -24,7 +25,6 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
   const [profileUrl, setProfileUrl] = useState("");
   const [isFetching, setIsFetching] = useState(false);
 
-  // ✅ Initialize scholarData safely
   const [scholarData, setScholarData] = useState<ScholarData>({
     name: "",
     affiliation: "",
@@ -46,13 +46,24 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
       const response = await fetch("/api/scrape-scholar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileUrl }),
+        body: JSON.stringify({ profileUrl, url: profileUrl }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setScholarData(data);
-        onDataFetched(data);
+        const rawData = await response.json();
+        
+        // Ensure array properties are always defined to prevent runtime crashes
+        const safeData: ScholarData = {
+          name: rawData.name || "Scholar User",
+          affiliation: rawData.affiliation || "Independent Researcher",
+          interests: Array.isArray(rawData.interests) ? rawData.interests : [],
+          citations: rawData.citations ?? 0,
+          hIndex: rawData.hIndex ?? 0,
+          recentPapers: Array.isArray(rawData.recentPapers) ? rawData.recentPapers : [],
+        };
+
+        setScholarData(safeData);
+        onDataFetched(safeData);
       } else {
         throw new Error("Failed to fetch Scholar profile");
       }
@@ -186,7 +197,7 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
                   transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
                   className="text-2xl font-bold"
                 >
-                  {(scholarData?.citations ?? 0).toLocaleString()}
+                  {scholarData.citations.toString()}
                 </motion.p>
                 <p className="text-xs opacity-90">Citations</p>
               </motion.div>
@@ -202,30 +213,32 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
                   transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
                   className="text-2xl font-bold"
                 >
-                  {(scholarData?.hIndex ?? 0).toLocaleString()}
+                  {scholarData.hIndex.toString()}
                 </motion.p>
                 <p className="text-xs opacity-90">h-index</p>
               </motion.div>
             </div>
 
-            <div>
-              <p className="text-xs text-blue-600 font-medium mb-2">RESEARCH INTERESTS</p>
-              <div className="flex flex-wrap gap-1">
-                {scholarData.interests.map((interest, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                    whileHover={{ scale: 1.1 }}
-                  >
-                    <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0">
-                      {interest}
-                    </Badge>
-                  </motion.div>
-                ))}
+            {(scholarData.interests || []).length > 0 && (
+              <div>
+                <p className="text-xs text-blue-600 font-medium mb-2">RESEARCH INTERESTS</p>
+                <div className="flex flex-wrap gap-1">
+                  {(scholarData?.interests || []).map((interest, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5 + index * 0.1 }}
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0">
+                        {interest}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         )}
       </CardContent>

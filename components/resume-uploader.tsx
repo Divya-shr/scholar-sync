@@ -255,7 +255,7 @@ const handleUpload = async () => {
                     <p className="text-xs text-green-600 font-medium">SKILLS EXTRACTED</p>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {extractedData.skills.map((skill, index) => (
+                    {(extractedData?.skills || []).map((skill: string, index: number) => (
                       <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800">
                         {skill}
                       </Badge>
@@ -269,9 +269,9 @@ const handleUpload = async () => {
                     <p className="text-xs text-green-600 font-medium">EDUCATION</p>
                   </div>
                   <div className="space-y-1">
-                    {extractedData.education.map((edu, index) => (
+                    {(extractedData?.education || []).map((item: any, index: number) => (
                       <p key={index} className="text-sm text-slate-700 bg-white p-2 rounded border border-green-200">
-                        {edu}
+                        {item}
                       </p>
                     ))}
                   </div>
