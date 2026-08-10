@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import type { RootState } from "@/store";
@@ -16,13 +17,17 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Clock, Sparkles } from "lucide-react";
+import { CheckCircle, Clock, Sparkles, Loader2 } from "lucide-react";
 
+import { setResumeData } from "@/store/resumeSlice";
+import { setScholarData } from "@/store/scholarSlice";
 import { setSuggestions } from "@/store/suggestionSlice";
 
 export default function AnalyzePage() {
   const dispatch = useDispatch();
   const router = useRouter();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const resumeData = useSelector((state: RootState) => state.resume.data);
   const scholarData = useSelector((state: RootState) => state.scholar.data);
@@ -36,6 +41,8 @@ export default function AnalyzePage() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       const res = await fetch("/api/suggest-projects", {
         method: "POST",
@@ -48,47 +55,41 @@ export default function AnalyzePage() {
         }),
       });
 
+      if (!res.ok) {
+        throw new Error("Failed to fetch suggestions");
+      }
+
       const data = await res.json();
-
-      dispatch(setSuggestions(data.projects));
-
+      dispatch(setSuggestions(data.projects || data));
       router.push("/results");
     } catch (err) {
-      console.error(err);
-      alert("Failed to generate suggestions.");
+      console.error("Suggestion error:", err);
+      alert("Failed to generate project suggestions. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="py-10 px-4 space-y-8">
-      <div className="text-center">
+    <div className="py-10 px-4 space-y-8 max-w-5xl mx-auto">
+      <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Analyze Your Profile</h1>
-        <p className="text-slate-600 mt-1">
+        <p className="text-slate-600">
           Upload your resume and connect your Google Scholar profile
         </p>
 
-        <div className="mt-4">
+        <div className="mt-4 max-w-md mx-auto">
           <Progress value={progress} className="h-2" />
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <ResumeUploader
-          onDataExtracted={(data) =>
-            dispatch({
-              type: "resume/setResumeData",
-              payload: data,
-            })
-          }
+          onDataExtracted={(data) => dispatch(setResumeData(data))}
         />
 
         <ScholarProfileInput
-          onDataFetched={(data) =>
-            dispatch({
-              type: "scholar/setScholarData",
-              payload: data,
-            })
-          }
+          onDataFetched={(data) => dispatch(setScholarData(data))}
         />
       </div>
 
@@ -114,17 +115,24 @@ export default function AnalyzePage() {
         <CardContent className="text-center">
           <Button
             size="lg"
-            className="mt-4"
+            className="mt-4 min-w-[240px]"
             onClick={handleGenerate}
-            disabled={!isReady}
+            disabled={!isReady || isLoading}
           >
-            Generate AI-Powered Projects
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing Profile...
+              </>
+            ) : (
+              "Generate AI-Powered Projects"
+            )}
           </Button>
         </CardContent>
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <Card className={resumeData ? "border-green-300 bg-green-50" : ""}>
+        <Card className={resumeData ? "border-green-300 bg-green-50/50" : ""}>
           <CardContent className="flex items-center p-4">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
@@ -140,14 +148,14 @@ export default function AnalyzePage() {
 
             <div>
               <p className="font-medium">Resume</p>
-              <p className="text-sm">
-                {resumeData ? "Uploaded" : "Waiting..."}
+              <p className="text-sm text-slate-500">
+                {resumeData ? "Uploaded & Parsed" : "Waiting for upload..."}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={scholarData ? "border-green-300 bg-green-50" : ""}>
+        <Card className={scholarData ? "border-green-300 bg-green-50/50" : ""}>
           <CardContent className="flex items-center p-4">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
@@ -163,8 +171,8 @@ export default function AnalyzePage() {
 
             <div>
               <p className="font-medium">Scholar Profile</p>
-              <p className="text-sm">
-                {scholarData ? "Connected" : "Waiting..."}
+              <p className="text-sm text-slate-500">
+                {scholarData ? "Connected" : "Waiting for link..."}
               </p>
             </div>
           </CardContent>

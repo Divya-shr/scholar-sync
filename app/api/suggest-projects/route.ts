@@ -1,24 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { suggestProjects } from "@/lib/suggest/matcher";
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+export async function POST(request: Request) {
   try {
-    const { resumeData, scholarData } = await req.json();
+    const body = await request.json();
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
-    if (!resumeData || !scholarData) {
-      return NextResponse.json({ error: "Resume and Scholar data are required" }, { status: 400 });
+    const response = await fetch(`${backendUrl}/suggest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend response error: ${response.status}`);
     }
 
-    const input = {
-      skills: resumeData.skills || [],
-      interests: scholarData.interests || [],
-      publications: scholarData.publications || []
-    };
-
-    const projects = suggestProjects(input);
-    return NextResponse.json({ projects });
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("[SuggestProjectsError]:", error);
-    return NextResponse.json({ error: "Failed to generate project suggestions" }, { status: 500 });
+    console.error('Error connecting to backend:', error);
+    return NextResponse.json(
+      { error: 'Failed to generate suggestions from backend API.' },
+      { status: 500 }
+    );
   }
 }
