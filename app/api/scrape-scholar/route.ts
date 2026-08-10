@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { scrapeScholarProfile } from '../../../lib/scholar/scraper';
+import { scrapeScholarProfile } from '@/lib/scholar/scraper';
 
 export const dynamic = 'force-dynamic';
 
