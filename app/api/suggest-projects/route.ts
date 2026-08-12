@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       : [];
     const education = Array.isArray(resume.education) ? resume.education : [];
     const interests = Array.isArray(scholar.interests) ? scholar.interests : [];
+    
     const recentPapers = Array.isArray(scholar.recentPapers)
       ? scholar.recentPapers
       : Array.isArray(scholar.recent_papers)
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
       hIndex: scholar.hIndex ?? scholar.h_index ?? 0,
       recent_papers: recentPapers,
       recentPapers: recentPapers,
+      publications: recentPapers, // <-- FIX: Mapping recentPapers to publications to satisfy FastAPI
       name: scholar.name || "Researcher",
       affiliation: scholar.affiliation || "",
       resume_data: resume,
