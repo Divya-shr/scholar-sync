@@ -46,18 +46,11 @@ export default function AnalyzePage() {
     try {
       const res = await fetch("/api/suggest-projects", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          resumeData,
-          scholarData,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeData, scholarData }),
       });
 
       const data = await res.json();
-      
-      // 1. Log the exact response to your browser console for debugging
       console.log("🔥 Raw AI Backend Response:", data);
 
       if (!res.ok) {
@@ -65,27 +58,39 @@ export default function AnalyzePage() {
         throw new Error(errorDetail || `Request failed with status ${res.status}`);
       }
 
-      // 2. Smart extraction: Find the array no matter how the AI formatted it
       let extractedProjects: any[] = [];
-      
+
+      // 1. Direct array
       if (Array.isArray(data)) {
-        extractedProjects = data; // It's already a direct array
-      } else if (data && typeof data === 'object') {
-        // Look for common keys
+        extractedProjects = data;
+      } 
+      // 2. Object with nested array
+      else if (data && typeof data === "object") {
         if (Array.isArray(data.projects)) extractedProjects = data.projects;
         else if (Array.isArray(data.suggestions)) extractedProjects = data.suggestions;
         else if (Array.isArray(data.data)) extractedProjects = data.data;
-        else {
-          // Desperation mode: grab the first array found anywhere in the response object
-          const foundArray = Object.values(data).find(val => Array.isArray(val));
-          if (foundArray) extractedProjects = foundArray as any[];
+        else if (Array.isArray(data.results)) extractedProjects = data.results;
+        
+        // 3. Stringified JSON or Markdown response wrapper
+        if (extractedProjects.length === 0) {
+          const rawText = data.text || data.response || data.result || data.message || data.output || "";
+          if (typeof rawText === "string" && rawText.length > 0) {
+            // Strip markdown backticks ```json ... ```
+            const cleanText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+            try {
+              const parsed = JSON.parse(cleanText);
+              if (Array.isArray(parsed)) extractedProjects = parsed;
+              else if (parsed.projects && Array.isArray(parsed.projects)) extractedProjects = parsed.projects;
+              else if (parsed.suggestions && Array.isArray(parsed.suggestions)) extractedProjects = parsed.suggestions;
+            } catch (pErr) {
+              console.error("Failed to parse nested JSON string:", pErr);
+            }
+          }
         }
       }
 
-      // 3. Fallback warning if the AI returned pure text instead of JSON
       if (extractedProjects.length === 0) {
-        console.warn("Could not find an array in the response. Did the AI return raw text?", data);
-        alert("The AI successfully analyzed your profile, but returned an unformatted response. Check the console (F12) to see the raw output!");
+        alert("Received response from backend, but could not parse project list. Please check the console log object.");
       }
 
       dispatch(setSuggestions(extractedProjects));
