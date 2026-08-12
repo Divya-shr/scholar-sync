@@ -55,16 +55,23 @@ export default function AnalyzePage() {
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to fetch suggestions");
+        const errorDetail =
+          typeof data.error === "string"
+            ? data.error
+            : typeof data.detail === "string"
+            ? data.detail
+            : JSON.stringify(data.error || data.detail || data);
+        throw new Error(errorDetail || `Request failed with status ${res.status}`);
       }
 
-      const data = await res.json();
       dispatch(setSuggestions(data.projects || data));
       router.push("/results");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Suggestion error:", err);
-      alert("Failed to generate project suggestions. Please try again.");
+      alert(`Error generating projects: ${err.message || "Please try again."}`);
     } finally {
       setIsLoading(false);
     }
