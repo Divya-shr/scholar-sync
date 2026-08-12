@@ -5,11 +5,21 @@ export const maxDuration = 60;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const resume = body.resumeData || body.resume_data || {};
+    const scholar = body.scholarData || body.scholar_data || {};
 
-    // Transform camelCase keys to snake_case expected by FastAPI / Pydantic
+    // Construct flattened payload expected by FastAPI schema
     const payload = {
-      resume_data: body.resumeData || body.resume_data || {},
-      scholar_data: body.scholarData || body.scholar_data || {},
+      skills: resume.skills || [],
+      experience: resume.experience || resume.workExperience || [],
+      education: resume.education || [],
+      interests: scholar.interests || [],
+      citations: scholar.citations || 0,
+      h_index: scholar.hIndex || scholar.h_index || 0,
+      recent_papers: scholar.recentPapers || scholar.recent_papers || [],
+      // Include fallback objects
+      resume_data: resume,
+      scholar_data: scholar,
     };
 
     const backendUrl =
