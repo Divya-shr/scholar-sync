@@ -56,18 +56,39 @@ export default function AnalyzePage() {
       });
 
       const data = await res.json();
+      
+      // 1. Log the exact response to your browser console for debugging
+      console.log("🔥 Raw AI Backend Response:", data);
 
       if (!res.ok) {
-        const errorDetail =
-          typeof data.error === "string"
-            ? data.error
-            : typeof data.detail === "string"
-            ? data.detail
-            : JSON.stringify(data.error || data.detail || data);
+        const errorDetail = typeof data.error === "string" ? data.error : JSON.stringify(data);
         throw new Error(errorDetail || `Request failed with status ${res.status}`);
       }
 
-      dispatch(setSuggestions(data.projects || data));
+      // 2. Smart extraction: Find the array no matter how the AI formatted it
+      let extractedProjects: any[] = [];
+      
+      if (Array.isArray(data)) {
+        extractedProjects = data; // It's already a direct array
+      } else if (data && typeof data === 'object') {
+        // Look for common keys
+        if (Array.isArray(data.projects)) extractedProjects = data.projects;
+        else if (Array.isArray(data.suggestions)) extractedProjects = data.suggestions;
+        else if (Array.isArray(data.data)) extractedProjects = data.data;
+        else {
+          // Desperation mode: grab the first array found anywhere in the response object
+          const foundArray = Object.values(data).find(val => Array.isArray(val));
+          if (foundArray) extractedProjects = foundArray as any[];
+        }
+      }
+
+      // 3. Fallback warning if the AI returned pure text instead of JSON
+      if (extractedProjects.length === 0) {
+        console.warn("Could not find an array in the response. Did the AI return raw text?", data);
+        alert("The AI successfully analyzed your profile, but returned an unformatted response. Check the console (F12) to see the raw output!");
+      }
+
+      dispatch(setSuggestions(extractedProjects));
       router.push("/results");
     } catch (err: any) {
       console.error("Suggestion error:", err);
@@ -76,7 +97,6 @@ export default function AnalyzePage() {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="py-10 px-4 space-y-8 max-w-5xl mx-auto">
       <div className="text-center space-y-2">
