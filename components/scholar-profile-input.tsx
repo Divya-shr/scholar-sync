@@ -1,79 +1,63 @@
 "use client";
-
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Loader2, CheckCircle, User, Building, BookOpen, TrendingUp } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { GraduationCap, Loader2, CheckCircle, User, Building, BookOpen, TrendingUp } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface ScholarData {
-  name: string;
-  affiliation: string;
-  interests: string[];
-  citations: number | string;
-  hIndex: number | string;
-  recentPapers: string[];
+  name: string
+  affiliation: string
+  interests: string[]
+  citations: number
+  hIndex: number
+  recentPapers: string[]
 }
 
 interface ScholarProfileInputProps {
-  onDataFetched: (data: ScholarData) => void;
+  onDataFetched: (data: ScholarData) => void
 }
 
 export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps) {
-  const [profileUrl, setProfileUrl] = useState("");
-  const [isFetching, setIsFetching] = useState(false);
-
-  const [scholarData, setScholarData] = useState<ScholarData>({
-    name: "",
-    affiliation: "",
-    interests: [],
-    citations: 0,
-    hIndex: 0,
-    recentPapers: [],
-  });
+  const [profileUrl, setProfileUrl] = useState("")
+  const [isFetching, setIsFetching] = useState(false)
+  const [scholarData, setScholarData] = useState<ScholarData | null>(null)
 
   const handleFetchProfile = async () => {
     if (!profileUrl.trim()) {
-      alert("Please enter a Google Scholar profile URL");
-      return;
+      alert("Please enter a Google Scholar profile URL")
+      return
     }
 
-    setIsFetching(true);
+    setIsFetching(true)
 
     try {
+      // 1. Send POST request to /api/scrape-scholar with the profile URL
       const response = await fetch("/api/scrape-scholar", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileUrl, url: profileUrl }),
-      });
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ profileUrl }),
+      })
 
       if (response.ok) {
-        const rawData = await response.json();
-        
-        // Ensure array properties are always defined to prevent runtime crashes
-        const safeData: ScholarData = {
-          name: rawData.name || "Scholar User",
-          affiliation: rawData.affiliation || "Independent Researcher",
-          interests: Array.isArray(rawData.interests) ? rawData.interests : [],
-          citations: rawData.citations ?? 0,
-          hIndex: rawData.hIndex ?? 0,
-          recentPapers: Array.isArray(rawData.recentPapers) ? rawData.recentPapers : [],
-        };
-
-        setScholarData(safeData);
-        onDataFetched(safeData);
+        // 2. Receive data (interests, papers, citations) and store in state
+        const data = await response.json()
+        setScholarData(data)
+        onDataFetched(data)
       } else {
-        throw new Error("Failed to fetch Scholar profile");
+        throw new Error("Failed to fetch Scholar profile")
       }
     } catch (error) {
-      console.error("Error fetching Scholar profile:", error);
-      alert("Failed to fetch Google Scholar profile. Please check the URL and try again.");
+      console.error("Error fetching Scholar profile:", error)
+      alert("Failed to fetch Google Scholar profile. Please check the URL and try again.")
     } finally {
-      setIsFetching(false);
+      setIsFetching(false)
     }
-  };
+  }
 
   return (
     <Card className="h-full bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 hover:shadow-xl transition-all duration-300">
@@ -88,7 +72,7 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
               <CardDescription>Connect your Google Scholar profile for research analysis</CardDescription>
             </div>
           </div>
-          {scholarData.name && (
+          {scholarData && (
             <Badge className="bg-green-100 text-green-800 border-green-200">
               <CheckCircle className="w-3 h-3 mr-1" />
               Connected
@@ -96,7 +80,6 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
           )}
         </div>
       </CardHeader>
-
       <CardContent className="space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -155,75 +138,76 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
           </Button>
         </motion.div>
 
-        {scholarData.name && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, type: "spring" }}
-            className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200"
-          >
-            <div className="flex items-center mb-3">
-              <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
-              <h4 className="font-semibold text-blue-800">Profile Connected Successfully!</h4>
-            </div>
+        <AnimatePresence>
+          {scholarData && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.5, type: "spring" }}
+              className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200"
+            >
+              <div className="flex items-center mb-3">
+                <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+                <h4 className="font-semibold text-blue-800">Profile Connected Successfully!</h4>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center p-3 bg-white rounded-lg border border-blue-200">
-                <User className="h-4 w-4 text-blue-600 mr-2" />
-                <div>
-                  <p className="text-xs text-blue-600 font-medium">RESEARCHER</p>
-                  <p className="text-sm font-semibold text-slate-900">{scholarData.name}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center p-3 bg-white rounded-lg border border-blue-200">
+                  <User className="h-4 w-4 text-blue-600 mr-2" />
+                  <div>
+                    <p className="text-xs text-blue-600 font-medium">RESEARCHER</p>
+                    <p className="text-sm font-semibold text-slate-900">{scholarData.name}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center p-3 bg-white rounded-lg border border-blue-200">
+                  <Building className="h-4 w-4 text-blue-600 mr-2" />
+                  <div>
+                    <p className="text-xs text-blue-600 font-medium">AFFILIATION</p>
+                    <p className="text-sm font-semibold text-slate-900">{scholarData.affiliation}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center p-3 bg-white rounded-lg border border-blue-200">
-                <Building className="h-4 w-4 text-blue-600 mr-2" />
-                <div>
-                  <p className="text-xs text-blue-600 font-medium">AFFILIATION</p>
-                  <p className="text-sm font-semibold text-slate-900">{scholarData.affiliation}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white"
+                >
+                  <TrendingUp className="h-5 w-5 mx-auto mb-1" />
+                  <motion.p
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+                    className="text-2xl font-bold"
+                  >
+                    {scholarData.citations.toLocaleString()}
+                  </motion.p>
+                  <p className="text-xs opacity-90">Citations</p>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="text-center p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white"
+                >
+                  <BookOpen className="h-5 w-5 mx-auto mb-1" />
+                  <motion.p
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
+                    className="text-2xl font-bold"
+                  >
+                    {scholarData.hIndex}
+                  </motion.p>
+                  <p className="text-xs opacity-90">h-index</p>
+                </motion.div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white"
-              >
-                <TrendingUp className="h-5 w-5 mx-auto mb-1" />
-                <motion.p
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-                  className="text-2xl font-bold"
-                >
-                  {scholarData.citations.toString()}
-                </motion.p>
-                <p className="text-xs opacity-90">Citations</p>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-white"
-              >
-                <BookOpen className="h-5 w-5 mx-auto mb-1" />
-                <motion.p
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
-                  className="text-2xl font-bold"
-                >
-                  {scholarData.hIndex.toString()}
-                </motion.p>
-                <p className="text-xs opacity-90">h-index</p>
-              </motion.div>
-            </div>
-
-            {(scholarData.interests || []).length > 0 && (
               <div>
                 <p className="text-xs text-blue-600 font-medium mb-2">RESEARCH INTERESTS</p>
                 <div className="flex flex-wrap gap-1">
-                  {(scholarData?.interests || []).map((interest, index) => (
+                  {scholarData.interests.map((interest, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, scale: 0 }}
@@ -238,10 +222,10 @@ export function ScholarProfileInput({ onDataFetched }: ScholarProfileInputProps)
                   ))}
                 </div>
               </div>
-            )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
-  );
+  )
 }
