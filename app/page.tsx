@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, Users, ArrowRight, Sparkles, Zap, Target, Brain } from "lucide-react"
+import { BookOpen, Users, ArrowRight, Sparkles, Brain } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function HomePage() {
@@ -39,12 +39,6 @@ export default function HomePage() {
       bgColor: "bg-emerald-50",
       delay: "delay-600",
     },
-  ]
-
-  const stats = [
-    { number: "10K+", label: "Researchers", icon: Users },
-    { number: "50K+", label: "Projects Matched", icon: Target },
-    { number: "95%", label: "Success Rate", icon: Zap },
   ]
 
   return (
@@ -91,7 +85,7 @@ export default function HomePage() {
             <span className="font-semibold text-emerald-600"> career goals</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/analyze">
               <Button
                 size="lg"
@@ -108,25 +102,6 @@ export default function HomePage() {
             >
               Watch Demo
             </Button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                className="text-center"
-              >
-                <div className="flex items-center justify-center mb-2">
-                  <stat.icon className="w-5 h-5 text-blue-600 mr-2" />
-                  <span className="text-3xl font-bold text-slate-900">{stat.number}</span>
-                </div>
-                <p className="text-slate-600 font-medium">{stat.label}</p>
-              </motion.div>
-            ))}
           </div>
         </motion.div>
 
