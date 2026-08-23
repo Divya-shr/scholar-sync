@@ -36,10 +36,7 @@ export default function AnalyzePage() {
   const progress = isReady ? 100 : resumeData || scholarData ? 50 : 0;
 
   const handleGenerate = async () => {
-    if (!isReady) {
-      alert("Please upload resume and connect Scholar profile");
-      return;
-    }
+    if (!isReady) return;
 
     setIsLoading(true);
 
@@ -54,7 +51,8 @@ export default function AnalyzePage() {
       console.log("🔥 Raw AI Backend Response:", data);
 
       if (!res.ok) {
-        const errorDetail = typeof data.error === "string" ? data.error : JSON.stringify(data);
+        const errorDetail =
+          typeof data.error === "string" ? data.error : JSON.stringify(data);
         throw new Error(errorDetail || `Request failed with status ${res.status}`);
       }
 
@@ -63,25 +61,28 @@ export default function AnalyzePage() {
       // 1. Direct array
       if (Array.isArray(data)) {
         extractedProjects = data;
-      } 
+      }
       // 2. Object with nested array
       else if (data && typeof data === "object") {
         if (Array.isArray(data.projects)) extractedProjects = data.projects;
         else if (Array.isArray(data.suggestions)) extractedProjects = data.suggestions;
         else if (Array.isArray(data.data)) extractedProjects = data.data;
         else if (Array.isArray(data.results)) extractedProjects = data.results;
-        
+
         // 3. Stringified JSON or Markdown response wrapper
         if (extractedProjects.length === 0) {
-          const rawText = data.text || data.response || data.result || data.message || data.output || "";
+          const rawText =
+            data.text || data.response || data.result || data.message || data.output || "";
           if (typeof rawText === "string" && rawText.length > 0) {
             // Strip markdown backticks ```json ... ```
             const cleanText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
             try {
               const parsed = JSON.parse(cleanText);
               if (Array.isArray(parsed)) extractedProjects = parsed;
-              else if (parsed.projects && Array.isArray(parsed.projects)) extractedProjects = parsed.projects;
-              else if (parsed.suggestions && Array.isArray(parsed.suggestions)) extractedProjects = parsed.suggestions;
+              else if (parsed.projects && Array.isArray(parsed.projects))
+                extractedProjects = parsed.projects;
+              else if (parsed.suggestions && Array.isArray(parsed.suggestions))
+                extractedProjects = parsed.suggestions;
             } catch (pErr) {
               console.error("Failed to parse nested JSON string:", pErr);
             }
@@ -90,18 +91,20 @@ export default function AnalyzePage() {
       }
 
       if (extractedProjects.length === 0) {
-        alert("Received response from backend, but could not parse project list. Please check the console log object.");
+        console.warn("Could not parse project list from backend response.");
       }
 
       dispatch(setSuggestions(extractedProjects));
       router.push("/results");
     } catch (err: any) {
       console.error("Suggestion error:", err);
-      alert(`Error generating projects: ${err.message || "Please try again."}`);
+      // Fall back directly to results page on error
+      router.push("/results");
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="py-10 px-4 space-y-8 max-w-5xl mx-auto">
       <div className="text-center space-y-2">
