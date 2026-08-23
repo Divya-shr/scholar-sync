@@ -1,62 +1,53 @@
-import { NextResponse } from 'next/server';
-import { load } from 'cheerio';
+import { NextResponse } from "next/server";
+import * as cheerio from "cheerio";
 
-export const dynamic = 'force-dynamic';
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json().catch(() => ({}));
+    const { url } = await req.json();
 
-    // Support all common property names sent by the frontend component
-    const rawUrl = body.url || body.scholarUrl || body.profileUrl || body.link || '';
-    const scholarUrl = typeof rawUrl === 'string' ? rawUrl.trim() : '';
-
-    if (!scholarUrl) {
-      return NextResponse.json({ error: 'Scholar URL is required' }, { status: 400 });
+    if (!url || !url.includes("scholar.google.com")) {
+      return NextResponse.json({ error: "Invalid Google Scholar URL" }, { status: 400 });
     }
 
-    // Try fetching the live profile page
-    let html = '';
-    try {
-      const response = await fetch(scholarUrl, {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept-Language': 'en-US,en;q=0.9',
-        },
-        cache: 'no-store',
-      });
-
-      if (response.ok) {
-        html = await response.text();
-      }
-    } catch (fetchErr) {
-      console.error('Fetch error:', fetchErr);
-    }
-
-    // Return fallback profile data if blocked by Google Scholar
-    if (!html) {
-      return NextResponse.json({
-        name: 'Scholar User',
-        citations: '120+',
-        hIndex: '5',
-        publications: ['Research Paper 1', 'Research Paper 2'],
-        status: 'Connected (Fallback Mode)',
-      });
-    }
-
-    // Parse HTML with Cheerio
-    const $ = load(html);
-    const name = $('#gsc_prf_in').text().trim() || 'Scholar Profile';
-    const citations = $('#gsc_rsb_st td.gsc_rsb_std').first().text().trim() || 'N/A';
-
-    return NextResponse.json({ name, citations, status: 'Success' });
-  } catch (error) {
-    console.error('Scraping error:', error);
-    return NextResponse.json({
-      name: 'Scholar Profile',
-      citations: 'N/A',
-      status: 'Connected',
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
     });
+
+    if (!response.ok) {
+      return NextResponse.json({ error: "Failed to fetch Scholar profile" }, { status: 500 });
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Dynamic Extraction
+    const name = $("#gsc_prf_in").text().trim() || "Unknown Researcher";
+    const affiliation = $(".gsc_prf_il").first().text().trim() || "Independent Researcher";
+
+    // Extract Stat Table Values (Index 0 = Citations, Index 2 = h-index)
+    const statsTable = $("#gsc_rsb_st td.gsc_rsb_std");
+    const citations = parseInt($(statsTable[0]).text().replace(/,/g, "")) || 0;
+    const hIndex = parseInt($(statsTable[2]).text().replace(/,/g, "")) || 0;
+
+    // Extract Research Interests from Google Scholar DOM
+    const interests: string[] = [];
+    $("#gsc_prf_int a").each((_, el) => {
+      const interestText = $(el).text().trim();
+      if (interestText) interests.push(interestText);
+    });
+
+    return NextResponse.json({
+      name,
+      affiliation,
+      citations,
+      hIndex,
+      interests: interests.length > 0 ? interests : ["Research"],
+    });
+  } catch (error: any) {
+    console.error("Scholar Scraping Error:", error);
+    return NextResponse.json({ error: "Failed to scrape profile details" }, { status: 500 });
   }
 }

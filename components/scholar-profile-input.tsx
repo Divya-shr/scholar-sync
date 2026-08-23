@@ -1,24 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { GraduationCap, Check, User, Building2, TrendingUp, BookOpen } from "lucide-react";
+import { GraduationCap, Check, User, Building2, TrendingUp, BookOpen, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function ScholarProfileInput({ onConnect }: { onConnect?: (data: any) => void }) {
-  const [scholarUrl, setScholarUrl] = useState("");
-  const [isConnected, setIsConnected] = useState(false);
-  const [scholarData, setScholarData] = useState<any>({
-    name: "Divya K",
-    affiliation: "Research Scholar",
-    citations: 4643,
-    hIndex: 28,
-    interests: ["Science", "Microbiology", "Nanotechnology"],
-  });
+interface ScholarData {
+  name: string;
+  affiliation: string;
+  citations: number;
+  hIndex: number;
+  interests: string[];
+}
 
-  const handleConnect = () => {
+export function ScholarProfileInput({ onConnect }: { onConnect?: (data: ScholarData) => void }) {
+  const [scholarUrl, setScholarUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [scholarData, setScholarData] = useState<ScholarData | null>(null);
+
+  const handleConnect = async () => {
     if (!scholarUrl) return;
-    setIsConnected(true);
-    if (onConnect) onConnect(scholarData);
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/scrape-scholar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: scholarUrl }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setScholarData(data);
+        setIsConnected(true);
+        if (onConnect) onConnect(data);
+      } else {
+        console.error("Scraper Error:", data.error);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,13 +89,21 @@ export function ScholarProfileInput({ onConnect }: { onConnect?: (data: any) => 
       {/* Connect Button */}
       <Button
         onClick={handleConnect}
+        disabled={loading}
         className="w-full py-2.5 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:opacity-90 text-white font-medium rounded-xl shadow-sm transition-all"
       >
-        Connect Scholar Profile
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Fetching Profile...
+          </>
+        ) : (
+          "Connect Scholar Profile"
+        )}
       </Button>
 
-      {/* Connected Profile Display - Full Details */}
-      {isConnected && (
+      {/* Fetched Scholar Data UI */}
+      {isConnected && scholarData && (
         <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2 text-blue-600 font-bold text-base">
             <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex items-center justify-center">
@@ -80,7 +112,7 @@ export function ScholarProfileInput({ onConnect }: { onConnect?: (data: any) => 
             Profile Connected Successfully!
           </div>
 
-          {/* User Info Cards */}
+          {/* Dynamic Researcher Name & Affiliation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-white rounded-xl p-3.5 border border-slate-100 flex items-center gap-3">
               <User className="w-4 h-4 text-blue-500" />
@@ -103,7 +135,7 @@ export function ScholarProfileInput({ onConnect }: { onConnect?: (data: any) => 
             </div>
           </div>
 
-          {/* Citation & h-index Stat Cards */}
+          {/* Dynamic Citations and h-index */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-cyan-500 text-white rounded-xl p-5 text-center space-y-1 shadow-sm">
               <TrendingUp className="w-5 h-5 mx-auto opacity-90" />
@@ -118,22 +150,24 @@ export function ScholarProfileInput({ onConnect }: { onConnect?: (data: any) => 
             </div>
           </div>
 
-          {/* Research Interests Tags */}
-          <div className="space-y-2 pt-1">
-            <p className="text-[11px] font-bold text-blue-600 tracking-wider uppercase">
-              RESEARCH INTERESTS
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {scholarData.interests.map((interest: string, idx: number) => (
-                <span
-                  key={idx}
-                  className="bg-emerald-500 text-white text-xs px-3 py-1 rounded-lg font-medium shadow-sm"
-                >
-                  {interest}
-                </span>
-              ))}
+          {/* Dynamic Research Interests */}
+          {scholarData.interests && scholarData.interests.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <p className="text-[11px] font-bold text-blue-600 tracking-wider uppercase">
+                RESEARCH INTERESTS
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {scholarData.interests.map((interest: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="bg-emerald-500 text-white text-xs px-3 py-1 rounded-lg font-medium shadow-sm"
+                  >
+                    {interest}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
