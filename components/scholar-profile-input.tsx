@@ -4,7 +4,7 @@ import { useState } from "react";
 import { GraduationCap, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function scholarProfile({ onConnect }: { onConnect?: (data: any) => void }) {
+export function ScholarProfileInput({ onConnect }: { onConnect?: (data: any) => void }) {
   const [scholarUrl, setScholarUrl] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [scholarData, setScholarData] = useState<any>({
@@ -66,7 +66,7 @@ export function scholarProfile({ onConnect }: { onConnect?: (data: any) => void 
         Connect Scholar Profile
       </Button>
 
-      {/* Connected Profile - Research Interests Only */}
+      {/* Connected Profile Display */}
       {isConnected && (
         <div className="bg-blue-50/40 border border-blue-100 rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2 text-blue-600 font-bold text-base mb-2">
