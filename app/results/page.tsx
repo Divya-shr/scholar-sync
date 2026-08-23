@@ -1,13 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import LinkNext from "next/link";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import type { RootState } from "@/store";
-import { Lightbulb, Star, ArrowLeft } from "lucide-react";
+import { Lightbulb, Star, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Fallback projects directly matching your target design
 const DEFAULT_PROJECTS = [
   {
     title: "AI-Powered Resume Ranker",
@@ -43,16 +43,18 @@ const DEFAULT_PROJECTS = [
 
 export default function ResultsPage() {
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Safely extract suggestions from Redux store
+  // Extract all profile data from Redux Store
+  const resumeData = useSelector((state: RootState) => (state as any).resume?.data || null);
+  const scholarData = useSelector((state: RootState) => (state as any).scholar?.data || null);
+
   const reduxSuggestions = useSelector((state: RootState) => {
-    // use the correctly named property from RootState
     const s = (state as any).suggestions || (state as any).suggestion || null;
     if (!s) return null;
     return s.suggestions || s.items || s.data || (Array.isArray(s) ? s : null);
   });
 
-  // Use Redux data if available and non-empty; otherwise fall back to default design items
   const projectsToDisplay =
     Array.isArray(reduxSuggestions) && reduxSuggestions.length > 0
       ? reduxSuggestions.map((item: any, index: number) => ({
@@ -70,10 +72,39 @@ export default function ResultsPage() {
         }))
       : DEFAULT_PROJECTS;
 
+  // Handle saving data directly to Supabase via API route
+  const handleSaveResults = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/save-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeData,
+          scholarData,
+          projects: projectsToDisplay,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alert("Results successfully saved to database!");
+      } else {
+        console.error("Failed to save:", data.error);
+        alert(`Could not save results: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      console.error("Save error:", err);
+      alert("Error saving results to database.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/60 py-10 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Navigation Link */}
         <div>
           <LinkNext
             href="/analyze"
@@ -83,7 +114,6 @@ export default function ResultsPage() {
           </LinkNext>
         </div>
 
-        {/* Page Title Header */}
         <div className="text-center space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Your Perfect <span className="text-indigo-600">Project Matches</span>
@@ -93,9 +123,7 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        {/* Main Amber Container Card */}
         <div className="bg-amber-50/40 border border-amber-200/80 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
-          {/* Top Amber Icon & Heading */}
           <div className="text-center space-y-2">
             <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mx-auto shadow-sm">
               <Lightbulb className="w-6 h-6 text-white" />
@@ -108,14 +136,12 @@ export default function ResultsPage() {
             </p>
           </div>
 
-          {/* Project List */}
           <div className="space-y-4">
             {projectsToDisplay.map((project, idx) => (
               <div
                 key={idx}
                 className="bg-white rounded-xl p-5 border border-amber-100/60 shadow-sm hover:shadow-md transition-shadow relative space-y-3"
               >
-                {/* Header row: Title + Match Badge */}
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-bold text-slate-800 text-base">
                     {project.title}
@@ -126,12 +152,10 @@ export default function ResultsPage() {
                   </div>
                 </div>
 
-                {/* Description */}
                 <p className="text-xs text-slate-500 leading-relaxed">
                   {project.description}
                 </p>
 
-                {/* Tech Tags */}
                 <div className="flex flex-wrap gap-2 pt-1">
                   {project.tags.map((tag: string, tIdx: number) => (
                     <span
@@ -146,7 +170,6 @@ export default function ResultsPage() {
             ))}
           </div>
 
-          {/* Bottom Footer Actions */}
           <div className="pt-4 text-center space-y-3">
             <p className="text-xs text-slate-500 font-medium">
               Want more personalized recommendations?
@@ -162,10 +185,18 @@ export default function ResultsPage() {
               </Button>
               <Button
                 size="sm"
+                disabled={isSaving}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-5 shadow-sm"
-                onClick={() => alert("Results saved to your profile!")}
+                onClick={handleSaveResults}
               >
-                Save Results
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Results"
+                )}
               </Button>
             </div>
           </div>
