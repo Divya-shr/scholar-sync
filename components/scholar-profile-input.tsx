@@ -4,7 +4,7 @@ import { useState } from "react";
 import { GraduationCap, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function ScholarProfileSection({ onConnect }: { onConnect?: (data: any) => void }) {
+export function scholarProfile({ onConnect }: { onConnect?: (data: any) => void }) {
   const [scholarUrl, setScholarUrl] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [scholarData, setScholarData] = useState<any>({
